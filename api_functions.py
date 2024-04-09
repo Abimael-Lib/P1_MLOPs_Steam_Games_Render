@@ -6,7 +6,7 @@ import operator
 
 # Datos a usar
 
-df_reviews = pd.read_parquet('\P1_MLOPs_Steam_Games_Render\Datasets\df_reviews.parquet')
+df_reviews = pd.read_parquet('\Datasets\df_reviews.parquet')
 df_gastos_items = pd.read_parquet('Datasets/df_gastos_items.parquet')
 df_genre_ranking = pd.read_parquet('Datasets/df_genre_ranking.parquet')
 df_playtime_forever = pd.read_parquet('Datasets/df_playtime_forever.parquet')
