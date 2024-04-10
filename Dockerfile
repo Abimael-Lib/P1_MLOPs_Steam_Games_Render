@@ -1,20 +1,17 @@
-# Usar la imagen de Rust como base
-FROM rust:latest
+# Imagen
+FROM python:3.10-slim
 
-# Establecer el directorio de trabajo dentro del contenedor
-WORKDIR /usr/src/app
+# Directorio de trabajo de la app
+WORKDIR /app
 
-# Copiar el archivo de dependencias
-COPY Cargo.toml ./
+# Copia los requerimientos del anfitrion
+COPY requirements.txt requirements.txt
 
-# Descargar las dependencias sin el código fuente
-RUN cargo fetch
+# Instala los requerimientos
+RUN pip install -r requirements.txt
 
-# Copiar todo el código fuente
-COPY . .
+# Copia todo lo del anfitrion (clonado de github)
+COPY main.py api_functions.py Datasets /app/
 
-# Compilar tu aplicación
-RUN cargo build --release
-
-# Comando para ejecutar tu aplicación
-CMD ["./target/release/tu_aplicacion"]
+# Argumentos para el comando entrypoint
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
