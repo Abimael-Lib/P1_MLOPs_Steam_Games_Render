@@ -1,21 +1,24 @@
-# Usa una imagen base con Python
-FROM python:3.9-slim
+# Usamos una imagen base con Rust preinstalado
+FROM rust:latest
+
+# Actualiza el repositorio de paquetes e instala curl
+RUN apt-get update && \
+    apt-get install -y curl
 
 # Instala Rust y Cargo
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
-    source $HOME/.cargo/env && \
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    export PATH="$PATH:$HOME/.cargo/bin" && \
+    export CARGO_HOME="$HOME/.cargo" && \
     rustup default stable
 
-# Configura el directorio de trabajo
-WORKDIR /app
+# Establece el directorio de trabajo
+WORKDIR /usr/src/app
 
-# Copia el código al contenedor
+# Copia tu código fuente al contenedor
 COPY . .
 
-# Instala los requerimientos
-RUN pip install --no-cache-dir -r requirements.txt
+# Compila tu aplicación
+RUN cargo build
 
-# Ejecuta la aplicación
-CMD ["python", "app.py"]
+# Ejecuta tu aplicación
+CMD ["./target/debug/your_app_name"]
