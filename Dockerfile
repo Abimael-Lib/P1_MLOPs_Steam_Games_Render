@@ -1,17 +1,21 @@
-# Imagen
-FROM python:3.10-slim
+# Usa una imagen base con Python
+FROM python:3.9-slim
 
-# Directorio de trabajo de la app
+# Instala Rust y Cargo
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    source $HOME/.cargo/env && \
+    rustup default stable
+
+# Configura el directorio de trabajo
 WORKDIR /app
 
-# Copia los requerimientos del anfitrion
-COPY requirements.txt ./requirements.txt
+# Copia el código al contenedor
+COPY . .
 
 # Instala los requerimientos
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia todo lo del anfitrion (clonado de github)
-COPY main.py api_functions.py Datasets /app/
-
-# Argumentos para el comando entrypoint
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+# Ejecuta la aplicación
+CMD ["python", "app.py"]
