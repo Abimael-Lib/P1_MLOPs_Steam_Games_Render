@@ -364,17 +364,21 @@ def userdata(user_id):
     '''
     # Filtra por el usuario de interés
     usuario = df_reviews[df_reviews['user_id'] == user_id]
+    
     # Calcula la cantidad de dinero gastado para el usuario de interés
-    cantidad_dinero = df_gastos_items[df_gastos_items['user_id']== user_id]['price'].iloc[0]
+    cantidad_dinero = df_gastos_items.loc[df_gastos_items['user_id']== user_id, 'price'].values[0]
+    
     # Busca el count_item para el usuario de interés    
-    count_items = df_gastos_items[df_gastos_items['user_id']== user_id]['items_count'].iloc[0]
+    count_items = df_gastos_items.loc[df_gastos_items['user_id']== user_id, 'items_count'].values[0]
     
     # Calcula el total de recomendaciones realizadas por el usuario de interés
     total_recomendaciones = usuario['reviews_recommend'].sum()
+    
     # Calcula el total de reviews realizada por todos los usuarios
-    total_reviews = len(df_reviews['user_id'].unique())
+    total_reviews = df_reviews['user_id'].nunique()
+    
     # Calcula el porcentaje de recomendaciones realizadas por el usuario de interés
-    porcentaje_recomendaciones = (total_recomendaciones / total_reviews) * 100
+    porcentaje_recomendaciones = (total_recomendaciones / total_reviews) * 100 if total_reviews != 0 else 0
     
     return {
         'cantidad_dinero': int(cantidad_dinero),
@@ -397,14 +401,18 @@ def countreviews(fecha_inicio, fecha_fin):
     '''
     # Filtra el dataframe entre las fechas de interés
     user_data_entre_fechas = df_reviews[(df_reviews['reviews_date'] >= fecha_inicio) & (df_reviews['reviews_date'] <= fecha_fin)]
+    
     # Calcula la cantidad de usuarios que dieron reviews entre las fechas de interés
     total_usuarios = user_data_entre_fechas['user_id'].nunique()
+    
     # Calcula el total de recomendaciones entre las fechas de interes (True + False)
     total_recomendacion = len(user_data_entre_fechas)
+    
     # Calcula la cantidad de recomendaciones positivas que que hicieron entre las fechas de interés
     total_recomendaciones_True = user_data_entre_fechas['reviews_recommend'].sum()
+    
     # Calcula el porcentaje de recomendación realizadas entre el total de usuarios
-    porcentaje_recomendaciones = (total_recomendaciones_True / total_recomendacion) * 100
+    porcentaje_recomendaciones = (total_recomendaciones_True / total_recomendacion) * 100 if total_recomendacion != 0 else 0
     
     return {
         'total_usuarios_reviews': int(total_usuarios),
@@ -423,7 +431,7 @@ def genre(genero):
             - 'rank' (int): Posición del género en el ranking basado en las horas jugadas.
     '''
     # Busca el ranking para el género de interés
-    rank = df_genre_ranking[df_genre_ranking['genres'] == genero]['ranking'].iloc[0]
+    rank = df_genre_ranking.loc[df_genre_ranking['genres'] == genero, 'ranking'].values[0]
     return {
         'rank': int(rank)
     }
@@ -442,20 +450,15 @@ def userforgenre(genero):
     '''
     # Filtra el dataframe por el género de interés
     data_por_genero = df_playtime_forever[df_playtime_forever['genres'] == genero]
+    
     # Agrupa el dataframe filtrado por usuario y suma la cantidad de horas
-    top_users = data_por_genero.groupby(['user_url', 'user_id'])['playtime_horas'].sum().nlargest(5).reset_index()
+    top_users = data_por_genero.groupby(['user_url', 'user_id'])['playtime_horas'].sum().nlargest(5)
     
     # Se hace un diccionario vacío para guardar los datos que se necesitan
-    top_users_dict = {}
-    for index, row in top_users.iterrows():
-        # User info recorre cada fila del top 5 y lo guarda en el diccionario
-        user_info = {
-            'user_id': row['user_id'],
-            'user_url': row['user_url']
-        }
-        top_users_dict[index + 1] = user_info
+    top_users_dict = {i+1: {'user_id': user_id, 'user_url': user_url} for i, (user_url, user_id) in enumerate(top_users.index)}
     
     return top_users_dict
+
 
 def developer(desarrollador):
     '''
@@ -471,16 +474,19 @@ def developer(desarrollador):
     '''
     # Filtra el dataframe por desarrollador de interés
     data_filtrada = df_items_developer[df_items_developer['developer'] == desarrollador]
+    
     # Calcula la cantidad de items por año
-    cantidad_por_año = data_filtrada.groupby('release_anio')['item_id'].count()
+    cantidad_por_año = data_filtrada.groupby('release_anio')['item_id'].count().to_dict()
+    
     # Calcula la cantidad de elementos gratis por año
-    cantidad_gratis_por_año = data_filtrada[data_filtrada['price'] == 0.0].groupby('release_anio')['item_id'].count()
+    cantidad_gratis_por_año = data_filtrada[data_filtrada['price'] == 0.0].groupby('release_anio')['item_id'].count().to_dict()
+    
     # Calcula el porcentaje de elementos gratis por año
-    porcentaje_gratis_por_año = (cantidad_gratis_por_año / cantidad_por_año * 100).fillna(0).astype(int)
-
+    porcentaje_gratis_por_año = {year: (cantidad_gratis_por_año.get(year, 0) / cantidad_por_año[year] * 100) for year in cantidad_por_año.keys()}
+    
     result_dict = {
-        'cantidad_por_año': cantidad_por_año.to_dict(),
-        'porcentaje_gratis_por_año': porcentaje_gratis_por_año.to_dict()
+        'cantidad_por_año': cantidad_por_año,
+        'porcentaje_gratis_por_año': porcentaje_gratis_por_año
     }
     
     return result_dict
@@ -502,8 +508,7 @@ def sentiment_analysis(anio):
     sentiment_counts = {'Negative': 0, 'Neutral': 0, 'Positive': 0}
     
     # Itera a través de las reseñas del año seleccionado
-    for _, row in anio_reviews.iterrows():
-        sentiment = row['sentiment_analysis']
+    for sentiment in anio_reviews['sentiment_analysis']:
         sentiment_category = ''
         
         # Maneja valores no numéricos en la columna 'release_anio'
@@ -536,20 +541,10 @@ def recomendacion_juego(game):
 
     '''
     # Obtener la lista de juegos similares ordenados
-    similar_games = item_sim_df.sort_values(by=game, ascending=False).iloc[1:6]
+    similar_games = item_sim_df.sort_values(by=game, ascending=False).index[1:6]
 
-    count = 1
-    contador = 1
-    recomendaciones = {}
-    
-    for item in similar_games:
-        if contador <= 5:
-            item = str(item)
-            recomendaciones[count] = item
-            count += 1
-            contador += 1 
-        else:
-            break
+    recomendaciones = {i+1: str(game) for i, game in enumerate(similar_games)}
+
     return recomendaciones
 
 def recomendacion_usuario(user):
@@ -570,22 +565,17 @@ def recomendacion_usuario(user):
     # Obtiene los usuarios más similares al usuario dado
     sim_users = user_sim_df.sort_values(by=user, ascending=False).index[1:11]
     
-    best = [] # Lista para almacenar los juegos mejor calificados por usuarios similares
     most_common = {} # Diccionario para contar cuántas veces se recomienda cada juego
     
     # Para cada usuario similar, encuentra el juego mejor calificado y lo agrega a la lista 'best'
     for i in sim_users:
         i = str(i)
         max_score = piv_norm.loc[:, i].max()
-        best.append(piv_norm[piv_norm.loc[:, i]==max_score].index.tolist())
+        best = piv_norm[piv_norm.loc[:, i]==max_score].index.tolist()
     
-    # Cuenta cuántas veces se recomienda cada juego
-    for i in range(len(best)):
-        for j in best[i]:
-            if j in most_common:
-                most_common[j] += 1
-            else:
-                most_common[j] = 1
+        # Cuenta cuántas veces se recomienda cada juego
+        for j in best:
+            most_common[j] = most_common.get(j, 0) + 1
     
     # Ordena los juegos por la frecuencia de recomendación en orden descendente
     sorted_list = sorted(most_common.items(), key=operator.itemgetter(1), reverse=True)
