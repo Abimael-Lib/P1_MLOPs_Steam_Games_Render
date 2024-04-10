@@ -8,43 +8,43 @@ app = FastAPI()
 
 # Funciones
 @app.get(path="/", response_class=HTMLResponse, tags=["Home"])
-def home():
+async def home():
     '''
     Página de inicio que muestra una presentación.
 
     Returns:
     HTMLResponse: Respuesta HTML que muestra la presentación.
     '''
-    return af.presentacion()
+    return await af.presentacion()
 
 @app.get(path='/userdata', description="Muestra la cantidad de dinero gastado por el usuario, el porcentaje de recomendación y la cantidad de items que tiene el mismo.", tags=["Consultas Generales"])
-def userdata(user_id: str = Query(..., description="Identificador único del usuario", example="EchoXSilence")):
-    return af.userdata(user_id)
+async def userdata(user_id: str = Query(..., description="Identificador único del usuario", example="EchoXSilence")):
+    return await af.userdata(user_id)
 
 @app.get(path='/countreviews', description="Muestra el resultado de la clasificación de las fechas de inicio y fin proporcionadas.", tags=["Consultas Generales"])
-def countreviews(fecha_inicio: str = Query(..., description="Fechas de inicio para filtrar la información", example='2011-11-05'), fecha_fin: str = Query(..., description="Fechas de Fin para filtrar la información", example='2012-12-24')):
-    return af.countreviews(fecha_inicio, fecha_fin)
+async def countreviews(fecha_inicio: str = Query(..., description="Fechas de inicio para filtrar la información", example='2011-11-05'), fecha_fin: str = Query(..., description="Fechas de Fin para filtrar la información", example='2012-12-24')):
+    return await af.countreviews(fecha_inicio, fecha_fin)
 
 @app.get(path='/genre', description="Muestra la posición del ranking donde se encuentra el género del juego proporcionado.", tags=["Consultas Generales"])
-def genre(genero: str = Query(..., description="Género del videojuego", example='Simulation')):
-    return af.genre(genero)
+async def genre(genero: str = Query(..., description="Género del videojuego", example='Simulation')):
+    return await af.genre(genero)
 
 @app.get(path='/userforgenre', description="Muestra el Top 5 de usuarios con más horas de juego en el género dado, con su URL y user_id.", tags=["Consultas Generales"])
-def userforgenre(genero: str = Query(..., description="Género del videojuego", example='Simulation')):
-    return af.userforgenre(genero)
+async def userforgenre(genero: str = Query(..., description="Género del videojuego", example='Simulation')):
+    return await af.userforgenre(genero)
 
 @app.get(path='/developer', description="Muestra la cantidad de items y porcentaje de contenido Free por año de ese desarrollador.", tags=["Consultas Generales"])
-def developer(desarrollador: str = Query(..., description="Desarrollador del videojuego", example='Valve')):
-    return af.developer(desarrollador)
+async def developer(desarrollador: str = Query(..., description="Desarrollador del videojuego", example='Valve')):
+    return await af.developer(desarrollador)
 
 @app.get('/sentiment_analysis', description="Muestra la cantidad de registros de reseñas de usuarios que se encuentren categorizados con un análisis de sentimiento para el año proporcionado.", tags=["Consultas Generales"])
-def sentiment_analysis(anio: str = Query(..., description="Año para filtrar los sentimientos de las reseñas", example="2009")):
-    return af.sentiment_analysis(anio)
+async def sentiment_analysis(anio: str = Query(..., description="Año para filtrar los sentimientos de las reseñas", example="2009")):
+    return await af.sentiment_analysis(anio)
 
 @app.get('/recomendacion_juego', description="Muestra los juegos recomendados a partir del nombre del juego proporcionado.", tags=["Recomendación"])
-def recomendacion_juego(game: str = Query(..., description="Juego a partir del cuál se hace la recomendación de otros juego", example="Killing Floor")):
-    return af.recomendacion_juego(game)
+async def recomendacion_juego(game: str = Query(..., description="Juego a partir del cuál se hace la recomendación de otros juego", example="Killing Floor")):
+    return await af.recomendacion_juego(game)
 
 @app.get('/recomendacion_usuario', description="Muestra los juegos recomendados para el usuario proporcionado.", tags=["Recomendación"])
-def recomendacion_usuario(user: str = Query(..., description="Usuario a partir del cuál se hace la recomendación de los juego", example="76561197970982479")):
-    return af.recomendacion_usuario(user)
+async def recomendacion_usuario(user: str = Query(..., description="Usuario a partir del cuál se hace la recomendación de los juego", example="76561197970982479")):
+    return await af.recomendacion_usuario(user)

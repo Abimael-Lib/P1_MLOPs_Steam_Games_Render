@@ -1,6 +1,5 @@
-## FUNCIONES 
-
-# Librerias
+# Importaciones
+from flask import Flask, request, jsonify
 import pandas as pd
 import operator
 from functools import lru_cache
@@ -15,6 +14,10 @@ piv_norm = pd.read_parquet('Datasets/piv_norm.parquet')
 item_sim_df = pd.read_parquet('Datasets/item_sim_df.parquet')
 user_sim_df = pd.read_parquet('Datasets/user_sim_df.parquet')
 
+# Se instancia la aplicación
+app = Flask(__name__)
+
+# Funciones
 def presentacion():
     '''
     Página de presentación HTML para la API Steam de consultas de videojuegos.
@@ -50,10 +53,8 @@ def presentacion():
 def userdata(user_id):
     '''
     Esta función devuelve información sobre un usuario según su 'user_id'.
-         
     Args:
         user_id (str): Identificador único del usuario.
-    
     Returns:
         dict: Un diccionario que contiene información sobre el usuario.
             - 'cantidad_dinero' (int): Cantidad de dinero gastado por el usuario.
@@ -66,14 +67,12 @@ def userdata(user_id):
     cantidad_dinero = df_gastos_items[df_gastos_items['user_id']== user_id]['price'].iloc[0]
     # Busca el count_item para el usuario de interés    
     count_items = df_gastos_items[df_gastos_items['user_id']== user_id]['items_count'].iloc[0]
-    
     # Calcula el total de recomendaciones realizadas por el usuario de interés
     total_recomendaciones = usuario['reviews_recommend'].sum()
     # Calcula el total de reviews realizada por todos los usuarios
     total_reviews = len(df_reviews['user_id'].unique())
     # Calcula el porcentaje de recomendaciones realizadas por el usuario de interés
     porcentaje_recomendaciones = (total_recomendaciones / total_reviews) * 100
-    
     return {
         'cantidad_dinero': int(cantidad_dinero),
         'porcentaje_recomendacion': round(float(porcentaje_recomendaciones), 2),
@@ -83,11 +82,9 @@ def userdata(user_id):
 def countreviews(fecha_inicio, fecha_fin):
     '''
     Esta función devuelve estadísticas sobre las reviews realizadas por los usuarios entre dos fechas.
-         
     Args:
         fecha_inicio (str): Fecha de inicio para filtrar la información en formato YYYY-MM-DD.
         fecha_fin (str): Fecha de fin para filtrar la información en formato YYYY-MM-DD.
-    
     Returns:
         dict: Un diccionario que contiene estadísticas de las reviews entre las fechas especificadas.
             - 'total_usuarios_reviews' (int): Cantidad de usuarios que realizaron reviews entre las fechas.
@@ -103,7 +100,6 @@ def countreviews(fecha_inicio, fecha_fin):
     total_recomendaciones_True = user_data_entre_fechas['reviews_recommend'].sum()
     # Calcula el porcentaje de recomendación realizadas entre el total de usuarios
     porcentaje_recomendaciones = (total_recomendaciones_True / total_recomendacion) * 100
-    
     return {
         'total_usuarios_reviews': int(total_usuarios),
         'porcentaje_recomendaciones': round(float(porcentaje_recomendaciones),2)
@@ -112,10 +108,8 @@ def countreviews(fecha_inicio, fecha_fin):
 def genre(genero):
     '''
     Esta función devuelve la posición de un género de videojuego en un ranking basado en la cantidad de horas jugadas.
-         
     Args:
         genero (str): Género del videojuego.
-    
     Returns:
         dict: Un diccionario que contiene la posición del género en el ranking.
             - 'rank' (int): Posición del género en el ranking basado en las horas jugadas.
@@ -129,10 +123,8 @@ def genre(genero):
 def userforgenre(genero):
     '''
     Esta función devuelve el top 5 de usuarios con más horas de juego en un género específico, junto con su URL de perfil y ID de usuario.
-         
     Args:
         genero (str): Género del videojuego.
-    
     Returns:
         dict: Un diccionario que contiene el top 5 de usuarios en un género.
             - 'usuarios' (list): Lista de diccionarios de usuarios en el top 5.
@@ -143,20 +135,17 @@ def userforgenre(genero):
     '''
     # Filtra los datos de horas jugadas para el género de interés
     top_users = df_playtime_forever[df_playtime_forever['genre'] == genero].head(5)
-    
     # Crea una lista de diccionarios para el top 5 de usuarios en el género
     usuarios = []
     for _, row in top_users.iterrows():
         user_id = row['user_id']
         playtime_forever = row['playtime_forever']
         profile_url = f'https://steamcommunity.com/profiles/{user_id}/'
-        
         usuarios.append({
             'user_id': str(user_id),
             'playtime_forever': round(float(playtime_forever), 2),
             'profile_url': profile_url
         })
-    
     return {
         'usuarios': usuarios
     }
@@ -165,10 +154,8 @@ def userforgenre(genero):
 def recomendacion_juego(item_id):
     '''
     Esta función devuelve una lista de juegos recomendados basados en el juego con el ID 'item_id'.
-         
     Args:
         item_id (str): ID del juego.
-    
     Returns:
         dict: Un diccionario que contiene los juegos recomendados.
             - 'juegos_recomendados' (list): Lista de diccionarios de juegos recomendados.
@@ -178,7 +165,6 @@ def recomendacion_juego(item_id):
     '''
     # Filtra la similitud del item de interés
     similar_items = item_sim_df[item_id].dropna()
-    
     # Crea una lista de juegos recomendados con sus puntajes de similitud
     juegos_recomendados = []
     for item, score in similar_items.items():
@@ -186,10 +172,8 @@ def recomendacion_juego(item_id):
             'item_id': str(item),
             'score': round(float(score), 4)
         })
-    
     # Ordena los juegos recomendados por puntaje de similitud
     juegos_recomendados = sorted(juegos_recomendados, key=lambda x: x['score'], reverse=True)
-    
     return {
         'juegos_recomendados': juegos_recomendados
     }
@@ -198,10 +182,8 @@ def recomendacion_juego(item_id):
 def recomendacion_usuario(user_id):
     '''
     Esta función devuelve una lista de juegos recomendados para un usuario específico basado en sus preferencias.
-         
     Args:
         user_id (str): ID del usuario.
-    
     Returns:
         dict: Un diccionario que contiene los juegos recomendados para el usuario.
             - 'juegos_recomendados' (list): Lista de diccionarios de juegos recomendados.
@@ -211,15 +193,12 @@ def recomendacion_usuario(user_id):
     '''
     # Busca los juegos que el usuario ya ha comprado
     juegos_comprados = df_gastos_items[df_gastos_items['user_id'] == user_id]['item_id'].tolist()
-    
     # Inicializa un diccionario para almacenar la suma de similitudes
     recomendaciones = {}
-    
     # Itera sobre los juegos comprados por el usuario
     for juego in juegos_comprados:
         # Filtra los juegos similares al juego actual
         juegos_similares = item_sim_df[str(juego)].dropna()
-        
         # Itera sobre los juegos similares y suma los puntajes de similitud
         for item, score in juegos_similares.items():
             if item not in juegos_comprados:
@@ -227,22 +206,15 @@ def recomendacion_usuario(user_id):
                     recomendaciones[item] += score
                 else:
                     recomendaciones[item] = score
-    
     # Ordena las recomendaciones por puntaje de similitud
     juegos_recomendados = sorted(recomendaciones.items(), key=operator.itemgetter(1), reverse=True)
-    
     # Filtra los juegos recomendados para excluir los juegos que el usuario ya ha comprado
     juegos_recomendados = [{'item_id': str(item), 'score': round(float(score), 4)} for item, score in juegos_recomendados if item not in juegos_comprados]
-    
     return {
         'juegos_recomendados': juegos_recomendados
     }
 
-# Se puede ejecutar el código como una aplicación Flask
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-
+# Rutas de la API
 @app.route('/')
 def index():
     return presentacion()
