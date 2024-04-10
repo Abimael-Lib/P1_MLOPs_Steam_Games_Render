@@ -1,18 +1,20 @@
-# Use the official Rust image from Docker Hub
+# Usar la imagen de Rust como base
 FROM rust:latest
 
-# Create a new directory to work in
+# Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /usr/src/app
 
-# Copy the local Cargo.toml and Cargo.lock into the container
-COPY Cargo.toml .
-COPY Cargo.lock .
+# Copiar los archivos de dependencias
+COPY Cargo.toml Cargo.lock ./
 
-# Copy the entire local code into the container
+# Build de las dependencias sin el código fuente
+RUN cargo build --release
+
+# Copiar todo el código fuente
 COPY . .
 
-# Build the application
-RUN cargo build
+# Compilar tu aplicación
+RUN cargo build --release
 
-# Set the startup command to run your binary
-CMD ["./target/debug/my_app"]
+# Comando para ejecutar tu aplicación
+CMD ["./target/release/tu_aplicacion"]
