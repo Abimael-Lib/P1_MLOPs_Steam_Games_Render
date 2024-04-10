@@ -6,17 +6,12 @@ import operator
 
 # Datos a usar
 
-df_reviews = pd.read_parquet('Datasets//df_reviews.parquet')
+df_reviews = pd.read_parquet('Datasets/df_reviews.parquet')
 df_gastos_items = pd.read_parquet('Datasets/df_gastos_items.parquet')
 df_genre_ranking = pd.read_parquet('Datasets/df_genre_ranking.parquet')
 df_playtime_forever = pd.read_parquet('Datasets/df_playtime_forever.parquet')
 df_items_developer = pd.read_parquet('Datasets/df_items_developer.parquet')
-
-piv_norm = pd.read_parquet('Datasets/piv_norm.parquet')
 item_sim_df = pd.read_parquet('Datasets/item_sim_df.parquet')
-user_sim_df = pd.read_parquet('Datasets/user_sim_df.parquet')
-
-
 
 def presentacion():
     '''
