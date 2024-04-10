@@ -4,11 +4,11 @@ FROM rust:latest
 # Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /usr/src/app
 
-# Copiar los archivos de dependencias
-COPY Cargo.toml Cargo.lock ./
+# Copiar el archivo de dependencias
+COPY Cargo.toml ./
 
-# Build de las dependencias sin el código fuente
-RUN cargo build --release
+# Descargar las dependencias sin el código fuente
+RUN cargo fetch
 
 # Copiar todo el código fuente
 COPY . .
